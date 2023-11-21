@@ -1,4 +1,5 @@
 const express = require("express");
+const { uploadFile, setFilterTypes } = require("../middlewares/multer");
 const {
     addImage,
     addMutipleImage,
@@ -17,9 +18,14 @@ const {
 const router = express.Router();
 
 router
-    .post("/image/single", addImage)
-    .post("/image/multi", addMutipleImage)
-    .post("/image/fiels", addImagesWithDifferentFields)
+    .post("/image/single", setFilterTypes(/.jpeg|.jpg|.png/), uploadFile.single('image'), addImage)
+    .post("/image/multi", setFilterTypes(/jpeg|jpg|png/), uploadFile.array('images', 10), addMutipleImage)
+    .post("/image/fields", setFilterTypes(/jpeg|jpg|png/), uploadFile.fields(
+        [
+            { name: 'profile', maxCount: 1 },
+            { name: "images", maxCount: 10 }
+        ]
+    ), addImagesWithDifferentFields)
     .post("/file/single", addFile)
     .post("/file/multi", addMultipleFile)
     .post("/file/fields", addFilesWithDifferentFields)
@@ -29,4 +35,6 @@ router
     .post("/video/single", addVideoFile)
     .post("/video/multi", addMultipleVideoFiles)
     .post("/video/fields", addVideoFilesWithDifferentFields)
+
+
 module.exports = router;

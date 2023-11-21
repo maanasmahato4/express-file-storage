@@ -1,9 +1,12 @@
 const { INTERNAL_SERVER_EXECEPTION } = require("../shared/contants");
+const { uploadToCloudinary } = require("../utils/cloudinary");
 
 const addImage = (req, res) => {
     try {
-
+        const filePath = req.file.path;
+        return res.status(200).json({ message: "file saved" });
     } catch (error) {
+        console.log(error);
         return res.status(500).json({ error: INTERNAL_SERVER_EXECEPTION, message: error });
     };
 };
