@@ -15,7 +15,6 @@ const filter = (req, file, cb) => {
     const fileTypes = req.locals.fileTypes;
     const extname = fileTypes.test(path.extname(file.originalname).toLowerCase());
     const mimeType = fileTypes.test(file.mimetype);
-    console.log(mimeType);
     if (!extname || !mimeType) {
         cb(new Error("file type not supported"));
     };
