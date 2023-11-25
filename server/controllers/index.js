@@ -258,7 +258,7 @@ const addMultipleFile = async (req, res) => {
     };
 };
 
-const addFilesWithDifferentFields = async(req, res) => {
+const addFilesWithDifferentFields = async (req, res) => {
     try {
         const { file, files } = req.files;
         const allFiles = [];
@@ -302,53 +302,263 @@ const addFilesWithDifferentFields = async(req, res) => {
     };
 };
 
-const addAudioFile = (req, res) => {
+const addAudioFile = async (req, res) => {
     try {
+        const file = req.file;
+        let savedToCloudinary;
+        try {
+            savedToCloudinary = await uploadToCloudinary(file.path, { quality: 90, folder: "audios" });
+        } catch (error) {
+            console.error('Failed to upload file to Cloudinary:', error);
+            return res.status(500).json({ error: INTERNAL_SERVER_EXECEPTION, message: 'Failed to upload file to Cloudinary' });
+        }
 
+        // create table if not already created
+        await createTable('audios');
+
+        let savedToDatabase;
+        try {
+            savedToDatabase = await pool.query(
+                'INSERT INTO audios (public_id, public_url) VALUES ($1, $2) RETURNING *',
+                [savedToCloudinary.public_id, savedToCloudinary.url]
+            );
+        } catch (error) {
+            console.error('Failed to save file to database:', error);
+            try {
+                await deleteFromCloudinary(file.path);
+            } catch (deleteError) {
+                console.error('Failed to delete file from Cloudinary:', deleteError);
+            }
+            try {
+                await RemoveFileFromFileStorage(file.path);
+            } catch (deleteError) {
+                console.error('Failed to delete file from local storage:', deleteError);
+            }
+            return res.status(500).json({ error: INTERNAL_SERVER_EXECEPTION, message: 'Failed to save file to database' });
+        }
+        return res.status(200).json({ message: "success", data: savedToDatabase.rows[0] });
     } catch (error) {
         return res.status(500).json({ error: INTERNAL_SERVER_EXECEPTION, message: error });
     };
 };
 
-const addMultipleAudioFiles = (req, res) => {
+const addMultipleAudioFiles = async (req, res) => {
     try {
+        const files = req.files;
 
+        // create table if not already created
+        await createTable('audios');
+
+        async function SaveToCloudinary(filePath) {
+            return await uploadToCloudinary(filePath, { quality: 100, folder: "audios" });
+        };
+        async function SaveToDatabase(file) {
+            return await pool.query(
+                'INSET INTO audios (public_id, public_url) VALUES ($1, $2) RETURNING *',
+                [file.public_id, file.url]
+            )
+        };
+
+        let savedToCloudinary;
+        try {
+            savedToCloudinary = Promise.all(files.map(async file => {
+                await SaveToCloudinary(file.path);
+            }));
+        } catch (error) {
+            return res.status(500).json({ error: INTERNAL_SERVER_EXECEPTION, message: error.message });
+        };
+
+        let savedToDatabase;
+        try {
+            savedToDatabase = Promise.all(savedToCloudinary.map(async file => {
+                await SaveToDatabase(file);
+            }));
+        } catch (error) {
+            return res.status(500).json({ error: INTERNAL_SERVER_EXECEPTION, message: error.message });
+        }
+
+        return res.status(200).json({ message: "success", data: savedToDatabase });
     } catch (error) {
         return res.status(500).json({ error: INTERNAL_SERVER_EXECEPTION, message: error });
     };
 };
 
-const addAudioFilesWithDifferentFields = (req, res) => {
+const addAudioFilesWithDifferentFields = async (req, res) => {
     try {
+        const { file, files } = req.files;
+        const allFiles = [];
+        allFiles.push(file);
+        files.forEach(file => allFiles.push(file));
 
+        // create table if not already created
+        await createTable('audios');
+
+        async function SaveToCloudinary(filePath) {
+            return await uploadToCloudinary(filePath, { quality: 100, folder: "audios" });
+        };
+        async function SaveToDatabase(file) {
+            return await pool.query(
+                'INSET INTO audios (public_id, public_url) VALUES ($1, $2) RETURNING *',
+                [file.public_id, file.url]
+            )
+        };
+
+        let savedToCloudinary;
+        try {
+            savedToCloudinary = Promise.all(allFiles.map(async file => {
+                await SaveToCloudinary(file.path);
+            }));
+        } catch (error) {
+            return res.status(500).json({ error: INTERNAL_SERVER_EXECEPTION, message: error.message });
+        };
+
+        let savedToDatabase;
+        try {
+            savedToDatabase = Promise.all(savedToCloudinary.map(async file => {
+                await SaveToDatabase(file);
+            }));
+        } catch (error) {
+            return res.status(500).json({ error: INTERNAL_SERVER_EXECEPTION, message: error.message });
+        }
+
+        return res.status(200).json({ message: "success" });
     } catch (error) {
         return res.status(500).json({ error: INTERNAL_SERVER_EXECEPTION, message: error });
     };
 };
 
-const addVideoFile = (req, res) => {
+const addVideoFile = async (req, res) => {
     try {
+        const file = req.file;
+        let savedToCloudinary;
+        try {
+            savedToCloudinary = await uploadToCloudinary(file.path, { quality: 90, folder: "videos" });
+        } catch (error) {
+            console.error('Failed to upload file to Cloudinary:', error);
+            return res.status(500).json({ error: INTERNAL_SERVER_EXECEPTION, message: 'Failed to upload file to Cloudinary' });
+        }
 
+        // create table if not already created
+        await createTable('videos');
+
+        let savedToDatabase;
+        try {
+            savedToDatabase = await pool.query(
+                'INSERT INTO videos (public_id, public_url) VALUES ($1, $2) RETURNING *',
+                [savedToCloudinary.public_id, savedToCloudinary.url]
+            );
+        } catch (error) {
+            console.error('Failed to save file to database:', error);
+            try {
+                await deleteFromCloudinary(file.path);
+            } catch (deleteError) {
+                console.error('Failed to delete file from Cloudinary:', deleteError);
+            }
+            try {
+                await RemoveFileFromFileStorage(file.path);
+            } catch (deleteError) {
+                console.error('Failed to delete file from local storage:', deleteError);
+            }
+            return res.status(500).json({ error: INTERNAL_SERVER_EXECEPTION, message: 'Failed to save file to database' });
+        }
+        return res.status(200).json({ message: "success", data: savedToDatabase.rows[0] });
     } catch (error) {
         return res.status(500).json({ error: INTERNAL_SERVER_EXECEPTION, message: error });
     };
 };
 
-const addMultipleVideoFiles = (req, res) => {
+const addMultipleVideoFiles = async (req, res) => {
     try {
+        const files = req.files;
 
+        // create table if not already created
+        await createTable('videos');
+
+        async function SaveToCloudinary(filePath) {
+            return await uploadToCloudinary(filePath, { quality: 100, folder: "videos" });
+        };
+        async function SaveToDatabase(file) {
+            return await pool.query(
+                'INSET INTO videos (public_id, public_url) VALUES ($1, $2) RETURNING *',
+                [file.public_id, file.url]
+            )
+        };
+
+        let savedToCloudinary;
+        try {
+            savedToCloudinary = Promise.all(files.map(async file => {
+                await SaveToCloudinary(file.path);
+            }));
+        } catch (error) {
+            return res.status(500).json({ error: INTERNAL_SERVER_EXECEPTION, message: error.message });
+        };
+
+        let savedToDatabase;
+        try {
+            savedToDatabase = Promise.all(savedToCloudinary.map(async file => {
+                await SaveToDatabase(file);
+            }));
+        } catch (error) {
+            return res.status(500).json({ error: INTERNAL_SERVER_EXECEPTION, message: error.message });
+        }
+
+        return res.status(200).json({ message: "success", data: savedToDatabase });
     } catch (error) {
         return res.status(500).json({ error: INTERNAL_SERVER_EXECEPTION, message: error });
     };
 };
 
-const addVideoFilesWithDifferentFields = (req, res) => {
+const addVideoFilesWithDifferentFields = async (req, res) => {
     try {
+        const { file, files } = req.files;
+        const allFiles = [];
+        allFiles.push(file);
+        files.forEach(file => allFiles.push(file));
 
+        // create table if not already created
+        await createTable('videos');
+
+        async function SaveToCloudinary(filePath) {
+            return await uploadToCloudinary(filePath, { quality: 100, folder: "videos" });
+        };
+        async function SaveToDatabase(file) {
+            return await pool.query(
+                'INSET INTO videos (public_id, public_url) VALUES ($1, $2) RETURNING *',
+                [file.public_id, file.url]
+            )
+        };
+
+        let savedToCloudinary;
+        try {
+            savedToCloudinary = Promise.all(allFiles.map(async file => {
+                await SaveToCloudinary(file.path);
+            }));
+        } catch (error) {
+            return res.status(500).json({ error: INTERNAL_SERVER_EXECEPTION, message: error.message });
+        };
+
+        let savedToDatabase;
+        try {
+            savedToDatabase = Promise.all(savedToCloudinary.map(async file => {
+                await SaveToDatabase(file);
+            }));
+        } catch (error) {
+            return res.status(500).json({ error: INTERNAL_SERVER_EXECEPTION, message: error.message });
+        }
+
+        return res.status(200).json({ message: "success" });
     } catch (error) {
         return res.status(500).json({ error: INTERNAL_SERVER_EXECEPTION, message: error });
     };
 };
+
+const deleteById = async (public_id) => {
+    try {
+        await deleteFromCloudinary(public_id);
+    } catch (error) {
+        return res.status(500).json({ error: INTERNAL_SERVER_EXECEPTION, message: error });
+    }
+}
 
 module.exports = {
     addImage,
@@ -362,5 +572,6 @@ module.exports = {
     addAudioFilesWithDifferentFields,
     addVideoFile,
     addMultipleVideoFiles,
-    addVideoFilesWithDifferentFields
+    addVideoFilesWithDifferentFields,
+    deleteById
 }
