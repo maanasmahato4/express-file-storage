@@ -1,4 +1,4 @@
-const { INTERNAL_SERVER_EXECEPTION } = require("../shared/contants");
+const { INTERNAL_SERVER_EXECEPTION, FILE_TYPES } = require("../shared/contants");
 const { uploadToCloudinary, deleteFromCloudinary } = require("../utils/cloudinary");
 const { pool } = require("../database/db");
 const { RemoveFileFromFileStorage } = require("../utils/deleteFileFromFileStorage");
@@ -11,7 +11,7 @@ const addImage = async (req, res) => {
         const filePath = req.file.path;
 
         // Upload the image to Cloudinary
-        const savedImage = await uploadToCloudinary(filePath, { quality: "auto", folder: "images" });
+        const savedImage = await uploadToCloudinary(filePath, FILE_TYPES.IMAGE, { quality: "auto", folder: "images" });
 
         // Check if the image was successfully uploaded
         if (!savedImage.public_id) {
@@ -53,7 +53,7 @@ const addMutipleImage = async (req, res) => {
         await createTable('images');
 
         async function savedInCloudinary(filePath) {
-            return await uploadToCloudinary(filePath, { quality: 90, folder: "images" });
+            return await uploadToCloudinary(filePath, FILE_TYPES.IMAGE, { quality: 90, folder: "images" });
         };
         async function savedInDatabase(image) {
             return await pool.query(
@@ -107,7 +107,7 @@ const addImagesWithDifferentFields = async (req, res) => {
         };
         // adding all the images from the allImages array to cloudinary
         for (let i = 0; i < allImages.length; i++) {
-            const savedImageInCloudinary = await uploadToCloudinary(allImages[i].path, { quality: 90, folder: "images" });
+            const savedImageInCloudinary = await uploadToCloudinary(allImages[i].path, FILE_TYPES.IMAGE, { quality: 90, folder: "images" });
             if (!savedImageInCloudinary) {
                 const notDeletedFromCloudinary = [];
                 for (let i = 0; i < savedInCloudinary.length; i++) {
@@ -179,7 +179,7 @@ const addFile = async (req, res) => {
         const file = req.file;
         let savedToCloudinary;
         try {
-            savedToCloudinary = await uploadToCloudinary(file.path, { quality: 90, folder: "files" });
+            savedToCloudinary = await uploadToCloudinary(file.path, FILE_TYPES.TEXT_FILE, { quality: 90, folder: "files" });
         } catch (error) {
             console.error('Failed to upload file to Cloudinary:', error);
             return res.status(500).json({ error: INTERNAL_SERVER_EXCEPTION, message: 'Failed to upload file to Cloudinary' });
@@ -225,7 +225,7 @@ const addMultipleFile = async (req, res) => {
         await createTable('images');
 
         async function SaveToCloudinary(filePath) {
-            return await uploadToCloudinary(filePath, { quality: 100, folder: "files" });
+            return await uploadToCloudinary(filePath, FILE_TYPES.TEXT_FILE, { quality: 100, folder: "files" });
         };
         async function SaveToDatabase(file) {
             return await pool.query(
@@ -269,7 +269,7 @@ const addFilesWithDifferentFields = async (req, res) => {
         await createTable('images');
 
         async function SaveToCloudinary(filePath) {
-            return await uploadToCloudinary(filePath, { quality: 100, folder: "files" });
+            return await uploadToCloudinary(filePath, FILE_TYPES.TEXT_FILE, { quality: 100, folder: "files" });
         };
         async function SaveToDatabase(file) {
             return await pool.query(
@@ -307,7 +307,7 @@ const addAudioFile = async (req, res) => {
         const file = req.file;
         let savedToCloudinary;
         try {
-            savedToCloudinary = await uploadToCloudinary(file.path, { quality: 90, folder: "audios" });
+            savedToCloudinary = await uploadToCloudinary(file.path, FILE_TYPES.AUDIO, { quality: 90, folder: "audios" });
         } catch (error) {
             console.error('Failed to upload file to Cloudinary:', error);
             return res.status(500).json({ error: INTERNAL_SERVER_EXECEPTION, message: 'Failed to upload file to Cloudinary' });
@@ -350,7 +350,7 @@ const addMultipleAudioFiles = async (req, res) => {
         await createTable('audios');
 
         async function SaveToCloudinary(filePath) {
-            return await uploadToCloudinary(filePath, { quality: 100, folder: "audios" });
+            return await uploadToCloudinary(filePath, FILE_TYPES.AUDIO, { quality: 100, folder: "audios" });
         };
         async function SaveToDatabase(file) {
             return await pool.query(
@@ -394,7 +394,7 @@ const addAudioFilesWithDifferentFields = async (req, res) => {
         await createTable('audios');
 
         async function SaveToCloudinary(filePath) {
-            return await uploadToCloudinary(filePath, { quality: 100, folder: "audios" });
+            return await uploadToCloudinary(filePath, FILE_TYPES.AUDIO, { quality: 100, folder: "audios" });
         };
         async function SaveToDatabase(file) {
             return await pool.query(
@@ -432,7 +432,7 @@ const addVideoFile = async (req, res) => {
         const file = req.file;
         let savedToCloudinary;
         try {
-            savedToCloudinary = await uploadToCloudinary(file.path, { quality: 90, folder: "videos" });
+            savedToCloudinary = await uploadToCloudinary(file.path, FILE_TYPES.VIDEO, { quality: 90, folder: "videos" });
         } catch (error) {
             console.error('Failed to upload file to Cloudinary:', error);
             return res.status(500).json({ error: INTERNAL_SERVER_EXECEPTION, message: 'Failed to upload file to Cloudinary' });
@@ -475,7 +475,7 @@ const addMultipleVideoFiles = async (req, res) => {
         await createTable('videos');
 
         async function SaveToCloudinary(filePath) {
-            return await uploadToCloudinary(filePath, { quality: 100, folder: "videos" });
+            return await uploadToCloudinary(filePath, FILE_TYPES.VIDEO, { quality: 100, folder: "videos" });
         };
         async function SaveToDatabase(file) {
             return await pool.query(
@@ -519,7 +519,7 @@ const addVideoFilesWithDifferentFields = async (req, res) => {
         await createTable('videos');
 
         async function SaveToCloudinary(filePath) {
-            return await uploadToCloudinary(filePath, { quality: 100, folder: "videos" });
+            return await uploadToCloudinary(filePath, FILE_TYPES.VIDEO, { quality: 100, folder: "videos" });
         };
         async function SaveToDatabase(file) {
             return await pool.query(
