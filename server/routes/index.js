@@ -26,7 +26,7 @@ router
             { name: "images", maxCount: 10 }
         ]
     ), addImagesWithDifferentFields)
-    .post("/file/single", addFile)
+    .post("/file/single", setFilterTypes(/.pdf|.docx/), uploadFile.single('file'), addFile)
     .post("/file/multi", addMultipleFile)
     .post("/file/fields", addFilesWithDifferentFields)
     .post("/audio/single", addAudioFile)
